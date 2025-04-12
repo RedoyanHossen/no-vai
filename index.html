@@ -1,133 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Splat the Bosses</title>
-  <style>
-    body {
-      margin: 0;
-      background: #222;
-      overflow: hidden;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background: #444;
-      border: 2px solid #fff;
-    }
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Splat the Bosses - Modern Edition</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+            overflow: hidden;
+            color: white;
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            margin: 20px auto;
+            border: 3px solid #555;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #444, #333);
+            border-radius: 7px;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        #startButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            font-size: 24px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #startButton:hover {
+            background: #45a049;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .enemy {
+            position: absolute;
+            width: 80px;
+            text-align: center;
+        }
+
+        .enemy img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        #player {
+            position: absolute;
+            width: 100px;
+            text-align: center;
+            transition: all 0.1s;
+        }
+
+        #player img {
+            width: 80px;
+            height: 80px;
+        }
+
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 30px 50px;
+            border-radius: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<canvas id="game" width="800" height="600"></canvas>
-<div id="score">Score: 0</div>
+    <div id="gameContainer">
+        <canvas id="game" width="800" height="600"></canvas>
+        <div id="score">Score: 0</div>
+        <button id="startButton">START MISSION</button>
+        <div id="gameOver">
+            <h1>MISSION COMPLETE!</h1>
+            <h2 id="finalScore">Score: 0</h2>
+            <button onclick="location.reload()">RESTART</button>
+        </div>
+    </div>
 
 <script>
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    let gameStarted = false;
 
-  const player = {
-    x: 400,
-    y: 300,
-    size: 30,
-    speed: 5,
-    color: "cyan"
-  };
+    const player = {
+        x: 400,
+        y: 500,
+        size: 40,
+        speed: 7,
+        direction: 1
+    };
 
-  const bullets = [];
-  const enemies = [
-    { x: 100, y: 100, name: "Ronald Grump", color: "orange", hit: false },
-    { x: 600, y: 150, name: "Ben Yahoon", color: "red", hit: false }
-  ];
+    const enemies = [
+        { x: 100, y: 100, name: "Trump", vx: 3, vy: 2, hit: false },
+        { x: 600, y: 150, name: "Netanyahu", vx: -2, vy: 3, hit: false }
+    ];
 
-  let keys = {};
-  let score = 0;
+    const bullets = [];
+    let score = 0;
 
-  document.addEventListener("keydown", (e) => keys[e.key] = true);
-  document.addEventListener("keyup", (e) => keys[e.key] = false);
+    // Load assets
+    const assets = {
+        player: new Image(),
+        trump: new Image(),
+        netanyahu: new Image(),
+        bullet: new Image()
+    };
 
-  function shoot() {
-    bullets.push({ x: player.x, y: player.y, size: 5 });
-  }
+    assets.player.src = 'https://example.com/path-to-islamic-militant-vector.png'; // Replace with actual image
+    assets.trump.src = 'https://example.com/path-to-trump-caricature.png';
+    assets.netanyahu.src = 'https://example.com/path-to-netanyahu-caricature.png';
+    assets.bullet.src = 'https://example.com/path-to-bullet.png';
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === " ") shoot();
-  });
+    document.addEventListener("keydown", (e) => keys[e.key] = true);
+    document.addEventListener("keyup", (e) => keys[e.key] = false);
 
-  function drawPlayer() {
-    ctx.fillStyle = player.color;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawEnemies() {
-    enemies.forEach(enemy => {
-      if (!enemy.hit) {
-        ctx.fillStyle = enemy.color;
-        ctx.beginPath();
-        ctx.rect(enemy.x, enemy.y, 40, 40);
-        ctx.fill();
-        ctx.fillStyle = "white";
-        ctx.font = "12px Arial";
-        ctx.fillText(enemy.name, enemy.x - 10, enemy.y - 5);
-      }
+    document.getElementById("startButton").addEventListener("click", () => {
+        gameStarted = true;
+        document.getElementById("startButton").style.display = "none";
+        resetGame();
     });
-  }
 
-  function drawBullets() {
-    ctx.fillStyle = "aqua";
-    bullets.forEach(bullet => {
-      ctx.beginPath();
-      ctx.arc(bullet.x, bullet.y, bullet.size, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
+    function resetGame() {
+        score = 0;
+        enemies.forEach(enemy => enemy.hit = false);
+        document.getElementById("score").innerText = "Score: 0";
+    }
 
-  function updateBullets() {
-    bullets.forEach(bullet => bullet.y -= 10);
-  }
+    function shoot() {
+        bullets.push({ x: player.x, y: player.y });
+    }
 
-  function checkHits() {
-    bullets.forEach((bullet, bIndex) => {
-      enemies.forEach(enemy => {
-        if (!enemy.hit &&
-          bullet.x > enemy.x && bullet.x < enemy.x + 40 &&
-          bullet.y > enemy.y && bullet.y < enemy.y + 40) {
-          enemy.hit = true;
-          score += 10;
-          document.getElementById("score").innerText = "Score: " + score;
-        }
-      });
-    });
-  }
+    function updateEnemies() {
+        enemies.forEach(enemy => {
+            if (!enemy.hit) {
+                enemy.x += enemy.vx;
+                enemy.y += enemy.vy;
+                
+                // Bounce off walls
+                if (enemy.x < 0 || enemy.x > 760) enemy.vx *= -1;
+                if (enemy.y < 0 || enemy.y > 560) enemy.vy *= -1;
+            }
+        });
+    }
 
-  function movePlayer() {
-    if (keys["ArrowUp"]) player.y -= player.speed;
-    if (keys["ArrowDown"]) player.y += player.speed;
-    if (keys["ArrowLeft"]) player.x -= player.speed;
-    if (keys["ArrowRight"]) player.x += player.speed;
-  }
+    function checkHits() {
+        bullets.forEach((bullet, bIndex) => {
+            enemies.forEach(enemy => {
+                if (!enemy.hit && Math.hypot(bullet.x - enemy.x-40, bullet.y - enemy.y-40) < 40) {
+                    enemy.hit = true;
+                    score += 100;
+                    document.getElementById("score").innerText = Score: ${score};
+                    
+                    // Check game over
+                    if (enemies.every(e => e.hit)) {
+                        document.getElementById("gameOver").style.display = "block";
+                        document.getElementById("finalScore").innerText = Final Score: ${score};
+                    }
+                }
+            });
+        });
+    }
 
-  function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    movePlayer();
-    drawPlayer();
-    drawEnemies();
-    updateBullets();
-    drawBullets();
-    checkHits();
-    requestAnimationFrame(gameLoop);
-  }
+    function gameLoop() {
+        if (!gameStarted) return;
 
-  gameLoop();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Update positions
+        movePlayer();
+        updateEnemies();
+        updateBullets();
+        checkHits();
+
+        // Draw elements
+        drawPlayer();
+        drawEnemies();
+        drawBullets();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // ... (Keep existing game logic functions but update drawing methods to use images)
+
+    function drawPlayer() {
+        ctx.drawImage(assets.player, player.x-40, player.y-40, 80, 80);
+    }
+
+    function drawEnemies() {
+        enemies.forEach(enemy => {
+            if (!enemy.hit) {
+                const img = enemy.name === "Trump" ? assets.trump : assets.netanyahu;
+                ctx.drawImage(img, enemy.x, enemy.y, 80, 80);
+            }
+        });
+    }
+
+    function drawBullets() {
+        bullets.forEach(bullet => {
+            ctx.drawImage(assets.bullet, bullet.x-10, bullet.y-20, 20, 40);
+        });
+    }
+
+    // Start the game loop
+    setInterval(gameLoop, 1000/60);
 </script>
 </body>
 </html>
