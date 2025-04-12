@@ -1,0 +1,6 @@
+{
+  "products": [
+    { "id": "1", "isIsraeli": true },
+    { "id": "2", "isIsraeli": false }
+  ]
+}
