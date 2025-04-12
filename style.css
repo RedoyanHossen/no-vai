@@ -1,0 +1,23 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial;
+    background: #f0f0f0;
+}
+
+#result {
+    font-size: 100px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.yes {
+    color: #ff0000; /* লাল */
+}
+
+.no {
+    color: #009900; /* সবুজ */
+}
